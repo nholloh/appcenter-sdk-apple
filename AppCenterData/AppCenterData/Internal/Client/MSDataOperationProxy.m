@@ -69,6 +69,35 @@
 
     // Execute remote operation if needed.
     if ([self shouldAttemptRemoteOperationForDocument:cachedDocument]) {
+
+      // Create document wrapper for current document.
+      if (operation != kMSPendingOperationRead) {
+        NSDictionary *pendingDocDictionary = [document serializeToDictionary];
+        if (deviceTimeToLive == kMSDataTimeToLiveNoCache) {
+          pendingDocDictionary = nil;
+        }
+        MSDocumentWrapper *pendingDocumentWrapper = [MSDocumentUtils documentWrapperFromDictionary:pendingDocDictionary
+                                                                                      documentType:documentType
+                                                                                              eTag:cachedDocument.eTag
+                                                                                   lastUpdatedDate:cachedDocument.lastUpdatedDate
+                                                                                         partition:token.partition
+                                                                                        documentId:documentId
+                                                                                  pendingOperation:operation
+                                                                                   fromDeviceCache:YES];
+
+        // If the operation is delete we don't want the document in the table to get cleaned up yet.
+        if ([operation isEqualToString:kMSPendingOperationDelete]) {
+          pendingDocumentWrapper = cachedDocument;
+          pendingDocumentWrapper.pendingOperation = operation;
+        }
+
+        // Store the operation in DB and mark as pending.
+        [self.documentStore upsertWithToken:token
+                            documentWrapper:pendingDocumentWrapper
+                                  operation:operation
+                           deviceTimeToLive:deviceTimeToLive];
+      }
+
       MSLogInfo([MSData logTag], @"Performing remote operation");
       remoteDocumentBlock(^(MSDocumentWrapper *_Nonnull remoteDocument) {
         // If a valid remote document was retrieved, update local store

@@ -118,4 +118,13 @@ static NSString *const kMSTrueEnvironmentString = @"1";
  */
 - (NSArray *)sortServices:(NSArray<Class> *)services;
 
+/**
+ * Entry point for dependency injection used for testing.
+ *
+ * @param httpClient The HTTP client to be used throughout App Center.
+ * @param reachabilityAdapter The reachability adapter to determine the network status.
+ * @param applicationLifecycleHelper The helper to determine the current application state.
+ */
++ (void)setDependenciesWithHttpClient:(id<MSHttpClientProtocol>)httpClient reachabilityAdapter:(id<MSReachabilityAdapterProtocol>)reachabilityAdapter applicationLifecycleHelper:(id<MSApplicationLifecycleHelperProtocol>)applicationLifecycleHelper;
+
 @end
